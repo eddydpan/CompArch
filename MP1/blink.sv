@@ -1,24 +1,21 @@
-// Blink
-
 module top(
-    input logic     clk, 
+    input logic    clk, 
     output logic    RGB_R,
     output logic    RGB_G,
     output logic    RGB_B
 );
 
     // CLK frequency is 12MHz, so 12,000,000 cycles is 1s
-    parameter BLINK_INTERVAL = 12000000;
-    parameter COLOR_CYCLE = 6;
-    logic [2:0] cycle = 0; //only need 3 bits
-    parameter SWITCH_COLOR_INTERVAL = BLINK_INTERVAL / COLOR_CYCLE; // Change color every 1/6 second
-    logic [$clog2(BLINK_INTERVAL) - 1:0] count = 0;
+    localparam BLINK_INTERVAL = 12000000;
+    localparam COLOR_CYCLE = 6;
+    localparam SWITCH_COLOR_INTERVAL = BLINK_INTERVAL / COLOR_CYCLE; // Change color every 1/6 second
+    localparam COUNT_BITS = $clog2(BLINK_INTERVAL);
+    logic [COUNT_BITS - 1:0] count = 0;
 
     always_ff @(posedge clk) begin
         // Reset count each second
         if (count == BLINK_INTERVAL - 1) begin
             count <= 0;
-            // LED <= ~LED;
         end
 
         // Increment count
@@ -26,18 +23,19 @@ module top(
             count <= count + 1;
         end
 
-        //
+    end
 
+    always_comb begin
+        // Change color based on count (use blocking assignment)
         case(count / SWITCH_COLOR_INTERVAL)
-            0: begin RGB_R <= 1'b0; RGB_G <= 1'b1; RGB_B <= 1'b1; end // Red
-            1: begin RGB_R <= 1'b0; RGB_G <= 1'b0; RGB_B <= 1'b1; end // Yellow
-            2: begin RGB_R <= 1'b1; RGB_G <= 1'b0; RGB_B <= 1'b1; end // Green
-            3: begin RGB_R <= 1'b1; RGB_G <= 1'b0; RGB_B <= 1'b0; end // Cyan
-            4: begin RGB_R <= 1'b1; RGB_G <= 1'b1; RGB_B <= 1'b0; end // Blue
-            5: begin RGB_R <= 1'b0; RGB_G <= 1'b1; RGB_B <= 1'b0; end // Magenta
-            default: begin RGB_R <= 1'b0; RGB_G <= 1'b0; RGB_B <= 1'b0; end // Off
+            0: {RGB_R, RGB_B, RGB_G} = 3'b011; // Red
+            1: {RGB_R, RGB_B, RGB_G} = 3'b001; // Yellow
+            2: {RGB_R, RGB_B, RGB_G} = 3'b101; // Green
+            3: {RGB_R, RGB_B, RGB_G} = 3'b100; // Cyan
+            4: {RGB_R, RGB_B, RGB_G} = 3'b110; // Blue
+            5: {RGB_R, RGB_B, RGB_G} = 3'b010; // Magenta
+            default: {RGB_R, RGB_B, RGB_G} = 3'b000; // Off
         endcase
-
     end
 
 endmodule
