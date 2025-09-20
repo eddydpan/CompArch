@@ -1,8 +1,15 @@
-# ENGR3410: MiniProject 1
-Eddy Pan
+# ENGR3410: MiniProject 1 -- Blinking RGB
+
+## For submission:
+
+1. source files in this directory (blink.sv)
+2. video demo: MP1_video_demo.MOV
+
+## Brief reflection:
+I enjoyed this mini project. I liked that it was pretty straightforward, and the only challenging part was learning the proper syntax and style for SystemVerilog. Thank you to CA Drew Pang for giving me a review of my source code and pointing out style changes and code changes such as consistent port indents, using `localparam` instead of `parameter`, and breaking out my implementation for my case block into an `always_comb`.
 
 
-## Notes
+## Notes During Implementation
 0° = red = (R=1,G=0,B=0)
 60° = yellow = (1,1,0)
 120° = green = (0,1,0)
