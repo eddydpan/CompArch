@@ -22,7 +22,7 @@ module fade_tb;
     initial begin
         $dumpfile("fade.vcd");
         $dumpvars(0, fade_tb);
-        #120000000
+        #100000000
         $finish;
     end
 

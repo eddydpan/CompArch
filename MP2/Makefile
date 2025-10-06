@@ -1,4 +1,5 @@
 filename = top
+main_filename = fade
 pcf_file = ../common/iceBlinkPico.pcf
 
 build:
@@ -11,3 +12,9 @@ prog: #for sram
 
 clean:
 	rm -rf $(filename).blif $(filename).asc $(filename).json $(filename).bin
+
+test:
+	iverilog -g2012 -o $(main_filename) $(main_filename)_tb.sv && vvp $(main_filename) && gtkwave $(main_filename).vcd visual_style.gtkw
+
+show:
+	gtkwave $(main_filename).vcd visual_style.gtkw

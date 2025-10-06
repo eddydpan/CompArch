@@ -12,12 +12,12 @@ module fade #(
 );
 
     // Define state variable values
-    localparam pwm_inc = 3'b000;
-    localparam pwm_hi = 3'b001;
-    localparam pwm_hi2 = 3'b010;
-    localparam pwm_dec = 3'b011;
-    localparam pwm_lo = 3'b100;
-    localparam pwm_lo2 = 3'b101;
+    localparam PWM_INC = 3'b000;
+    localparam PWM_HI = 3'b001;
+    localparam PWM_HI2 = 3'b010;
+    localparam PWM_DEC = 3'b011;
+    localparam PWM_LO = 3'b100;
+    localparam PWM_LO2 = 3'b101;
 
     // Declare state variables
     logic [2:0] current_state = INITIAL_STATE;
@@ -29,43 +29,35 @@ module fade #(
     logic time_to_inc_dec = 1'b0;
     logic time_to_transition = 1'b0;
 
+    // Initialize pwm_value based on INITIAL_STATE
     initial begin
-        case (INITIAL_STATE)
-            pwm_hi,
-            pwm_hi2,
-            pwm_dec:
-                pwm_value = PWM_INTERVAL;
-            pwm_lo,
-            pwm_lo2,
-            pwm_inc:
-                pwm_value = 0;
-            default:
-                pwm_value = 0;
-        endcase
+        if (INITIAL_STATE == PWM_HI || INITIAL_STATE == PWM_HI2 || INITIAL_STATE == PWM_DEC)
+            pwm_value = INC_DEC_VAL * (INC_DEC_MAX); 
+        else
+            pwm_value = 0;
     end
+
 
     // Register the next state of the FSM
     always_ff @(posedge time_to_transition)
-
-        // current_state <= (current_state == 3'b101) ? 3'b000 : current_state + 1; // wrap around to initial state
         current_state <= next_state;
 
     // Compute the next state of the FSM
     always_comb begin
         next_state = 3'bxxx;
         case (current_state)
-            pwm_inc:
-                next_state = pwm_hi;
-            pwm_hi:
-                next_state = pwm_hi2;
-            pwm_hi2:
-                next_state = pwm_dec;
-            pwm_dec:
-                next_state = pwm_lo;
-            pwm_lo:
-                next_state = pwm_lo2;
-            pwm_lo2:
-                next_state = pwm_inc; 
+            PWM_INC:
+                next_state = PWM_HI;
+            PWM_HI:
+                next_state = PWM_HI2;
+            PWM_HI2:
+                next_state = PWM_DEC;
+            PWM_DEC:
+                next_state = PWM_LO;
+            PWM_LO:
+                next_state = PWM_LO2;
+            PWM_LO2:
+                next_state = PWM_INC;
         endcase
     end
 
@@ -84,9 +76,9 @@ module fade #(
     // Increment / Decrement PWM value as appropriate given current state
     always_ff @(posedge time_to_inc_dec) begin
         case (current_state)
-            pwm_inc:
+            PWM_INC:
                 pwm_value <= pwm_value + INC_DEC_VAL;
-            pwm_dec:
+            PWM_DEC:
                 pwm_value <= pwm_value - INC_DEC_VAL;
 
         endcase

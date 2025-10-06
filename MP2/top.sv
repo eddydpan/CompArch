@@ -20,7 +20,7 @@ module top #(
     logic rgb_b_pwm_out;
 
     fade #(
-        .INITIAL_STATE  (3'b010), // start at pwm_hi1
+        .INITIAL_STATE  (3'b010), // start at pwm_hi2
         .PWM_INTERVAL   (PWM_INTERVAL)
     ) u1 (
         .clk            (clk), 

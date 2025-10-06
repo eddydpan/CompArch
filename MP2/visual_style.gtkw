@@ -1,0 +1,38 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Sun Sep 28 00:53:34 2025
+[*]
+[dumpfile] "/home/epan/Github/CompArch/MP2/fade.vcd"
+[dumpfile_mtime] "Sat Sep 27 22:22:28 2025"
+[dumpfile_size] 1739570749
+[savefile] "/home/epan/Github/CompArch/MP2/visual_style.gtkw"
+[timestart] 0
+[size] 1920 1001
+[pos] -51 -51
+*-28.799999 14000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] fade_tb.
+[sst_width] 297
+[signals_width] 269
+[sst_expanded] 1
+[sst_vpaned_height] 298
+@8024
+[color] 1
+fade_tb.u0.rgb_r_pwm_value[10:0]
+@20000
+-
+-
+@8024
+[color] 4
+fade_tb.u0.rgb_g_pwm_value[10:0]
+@20000
+-
+-
+@8024
+[color] 6
+fade_tb.u0.rgb_b_pwm_value[10:0]
+@20000
+-
+@20001
+-
+[pattern_trace] 1
+[pattern_trace] 0
