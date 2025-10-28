@@ -12,12 +12,13 @@ module top(
     output logic    _45a
 );
 
-    logic [7:0] red_data = 8'b00000000;
     logic [7:0] green_data = 8'b00000000;
     logic [7:0] blue_data = 8'b00000000;
+    logic [7:0] red_data = 8'b00000000;
+
 
     logic [5:0] pixel;
-    logic [4:0] frame; // init to 2
+    // logic [4:0] frame;
     // logic [10:0] address;
 
     logic [23:0] shift_reg = 24'd0;
@@ -57,40 +58,59 @@ module top(
 
 
     // Game of Life state
-    logic [63:0] game_board =  64'h0000_0000_1C00_0000;
-    logic [63:0] next_state;
+    logic [63:0] green_game_board =  64'h0000_0000_1C00_0000;
+    logic [63:0] green_next_state;
     // logic [63:0] init_board =  64'h0000_0000_1C00_0000; // Example: spinner
     //                              row0 row1 row2 row3 row4 row5 row6 row7
     //                              0000 0000 0001 1100 0000 0000 0000 0000
     //                              Bits at positions 18, 19, 20 (row 2, cols 3,4,5)
-    logic game_done;
-    logic start_game;
-    logic game_ready = 1'b1;
+    logic green_game_done;
+    logic red_game_done;
+    logic blue_game_done;
+
+    // logic start_game;
+    logic green_game_ready = 1'b1;
 
     // Start a new game iteration at the beginning of each frame
-    assign start_game = (pixel == 6'd0) && load_sreg && game_ready;
+    assign green_start_game = (pixel == 6'd0) && load_sreg && green_game_ready;
 
     always_ff @(posedge clk) begin
-        if (start_game) begin
-            game_ready <= 1'b0;
+        if (green_start_game) begin
+            green_game_ready <= 1'b0;
         end
-        else if (game_done) begin
-            game_ready <= 1'b1;
+        else if (clk == 1'b0 && green_game_done) begin
+            green_game_ready <= 1'b1;
         end
     end
 
-    always_ff @(posedge game_done) begin
-        game_board <= next_state;
+    always_ff @(posedge green_game_done) begin
+        green_game_board <= green_next_state;
         // this is triggering on game done but only once per game_done
     end
 
     // Game of Life instance
-    game_of_life u3 (
+    game_of_life green (
         .clk(clk),
-        .start(start_game),
-        .init_state(game_board),
-        .curr_state(next_state),
-        .done(game_done)
+        .start(green_start_game),
+        .init_state(green_game_board),
+        .curr_state(green_next_state),
+        .done(green_game_done)
+    );
+
+    game_of_life red (
+        .clk(clk),
+        .start(red_start_game),
+        .init_state(red_game_board),
+        .curr_state(red_next_state),
+        .done(red_game_done)
+    );
+
+    game_of_life blue (
+        .clk(clk),
+        .start(blue_start_game),
+        .init_state(blue_game_board),
+        .curr_state(blue_next_state),
+        .done(blue_game_done)
     );
 
     // Instance the WS2812B output driver
