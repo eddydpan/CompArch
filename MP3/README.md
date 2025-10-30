@@ -50,13 +50,23 @@ At about index 20, a hexadecimal `8` (4b'0100) is replaced by a `0` (4b'0000).
 At index 26, `alive_neighbors` reaches a `3`, meeting a condition to be alive, 
 ![First alive](assets/gol_first_alive.png)
 the hexadecimal changes from `8` (4b'1000) to `C` (4b'1100). At index 27, since `alive_neighbors == 2` and `init_state[27] == 1`, the cell stays alive, and stays at `C` (4b'1100) instead of dropping to `4` (4b'0100). Finally, at index 27, `alive_neighbors == 3`, 
-![alt text](assets/gol_last_alive.png)
+![Last alive added to the state](assets/gol_last_alive.png)
 the next hex `0` (4b'0000) turns into a `1` (4b'0001).
+
+![Last overwritten hex for complete final state](assets/gol_last_overwritten_hex.png)
+Finally, by the 36th index, the last hex from the previous state `8` (4b'0100), is switched off into a `0` (4b'0000). 
+
+At the end of the 63rd index, the updating flag turns off, and the done flag goes up. `green_board` is then updated to `next_state`. 
+![63rd index, finished GOL ](assets/gol_final_index.png)
+
+In conclusion, a good next-step would be to set the state of the 64-bit register to all 0s and then populate it at each frame so that the data from the last state's bits aren't pre-populated.
+
 ### `top` module
 I organized the `top` module similarly to the `led_matrix` example. Since I keep track of each of my game states in a 64-bit register, where each bit represents if the cell at that index is alive or dead (1 or 0), I removed the `memory` modules. To initialize my game state from a file, I used an initial block with `$readmemh` to read in the initial 64-bits of each text file into an 1-element unpacked temporary array, `green_init_board`. In the `always_ff` block right after it that executes on the positive clock edge, I check a `board_initialized` flag to determine whether I initialize my `green_board` with the 64-bits from the `green.txt` file, or update my `green_board` to `green_next` computed from my `game_of_life` module.
 
-Load shift register in conjunction with the `ws2812b` module to update `_48b` pin with the signal
+With my `game_board` update logic handled, I instantiate the three `game_of_life` modules to calculate the next game state for the `red_board`, `blue_board`, and `green_board`. These `game_of_life` modules use shared `game_start`, `game_done`, and `game_updating` states to keep the code a bit more DRY and to keep my three game-of-life modules synced up.
 
+After instantiating the `ws2812b` and `controller` modules just as they were in the `led_matrix` example, I have an `always_ff` block that triggers on the positive edge of the clock to load the shift register from the `green`, `red`, and `blue` board states when the `load_sreg` signal is high. For each 8-bit segment (G,R,B) the shift register is loaded with either `8'h0F` or `8'h00` (on or off) depending on whether the cell at that pixel is alive.  
 
 ## Testing and Validation
 Using the GTKWave test, I ran my test bench for 3 seconds to capture 3 iterations of the Game of Life. Here are some results:
