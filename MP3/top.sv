@@ -27,11 +27,6 @@ module top(
     // Trigger game update once per frame
     assign game_start = (pixel == 6'd0) && load_sreg && !game_updating;
 
-    // ========== THREE GAME BOARDS (one per color) ==========
-    // logic [63:0] green_board = 64'h0000_0000_1C00_0000;  // Horizontal spinner
-    // logic [63:0] red_board   = 64'h0000_0000_00E0_2040;  // Glider
-    // logic [63:0] blue_board  = 64'h1C00_0000_0000_0000;  // Edge spinner
-
     logic [63:0] green_board = 64'h0000_0000_0000_0000; 
     logic [63:0] red_board = 64'h0000_0000_0000_0000;
     logic [63:0] blue_board = 64'h0000_0000_0000_0000;
@@ -39,10 +34,6 @@ module top(
     logic [0:63] green_init_board [0:0]; // 64 element unpacked array
     logic [0:63] red_init_board [0:0];
     logic [0:63] blue_init_board [0:0];
-
-    // logic [7:0] green_init_board [0:7]; // 8 element unpacked array
-    // logic [7:0] red_init_board [0:7];
-    // logic [7:0] blue_init_board [0:7];
 
     logic boards_initialized = 1'b0;
 
@@ -109,7 +100,7 @@ module top(
         .updating(blue_updating)
     );
 
-    // ========== DISPLAY LOGIC ==========
+    
     ws2812b u4 (
         .clk            (clk), 
         .serial_in      (shift_reg[23]), 
