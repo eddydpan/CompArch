@@ -2,8 +2,6 @@
 `include "ws2812b.sv"
 `include "controller.sv"
 
-// led_matrix top level module
-
 module top(
     input logic     clk, 
     input logic     SW, 
@@ -12,14 +10,8 @@ module top(
     output logic    _45a
 );
 
-    logic [7:0] green_data = 8'b00000000;
-    logic [7:0] blue_data = 8'b00000000;
-    logic [7:0] red_data = 8'b00000000;
-
-
     logic [5:0] pixel;
-    // logic [4:0] frame;
-    // logic [10:0] address;
+    logic [4:0] frame;
 
     logic [23:0] shift_reg = 24'd0;
     logic load_sreg;
@@ -27,93 +19,112 @@ module top(
     logic shift;
     logic ws2812b_out;
 
-    // assign address = { frame, pixel };
+    // Shared game control flags
+    logic game_start;
+    logic game_done;
+    logic game_updating;
+    
+    // Trigger game update once per frame
+    assign game_start = (pixel == 6'd0) && load_sreg && !game_updating;
 
-    // // Instance sample memory for red channel
-    // memory #(
-    //     .INIT_FILE      ("spiral/red.txt")
-    // ) u1 (
-    //     .clk            (clk), 
-    //     .read_address   (address), 
-    //     .read_data      (red_data)
-    // );
+    // ========== THREE GAME BOARDS (one per color) ==========
+    // logic [63:0] green_board = 64'h0000_0000_1C00_0000;  // Horizontal spinner
+    // logic [63:0] red_board   = 64'h0000_0000_00E0_2040;  // Glider
+    // logic [63:0] blue_board  = 64'h1C00_0000_0000_0000;  // Edge spinner
 
-    // // Instance sample memory for green channel
-    // memory #(
-    //     .INIT_FILE      ("spiral/green.txt")
-    // ) u2 (
-    //     .clk            (clk), 
-    //     .read_address   (address), 
-    //     .read_data      (green_data)
-    // );
+    logic [63:0] green_board = 64'h0000_0000_0000_0000; 
+    logic [63:0] red_board = 64'h0000_0000_0000_0000;
+    logic [63:0] blue_board = 64'h0000_0000_0000_0000;
 
-    // // Instance sample memory for blue channel
-    // memory #(
-    //     .INIT_FILE      ("spiral/blue.txt")
-    // ) u3 (
-    //     .clk            (clk), 
-    //     .read_address   (address), 
-    //     .read_data      (blue_data)
-    // );
+    logic [0:63] green_init_board [0:0]; // 64 element unpacked array
+    logic [0:63] red_init_board [0:0];
+    logic [0:63] blue_init_board [0:0];
 
+    // logic [7:0] green_init_board [0:7]; // 8 element unpacked array
+    // logic [7:0] red_init_board [0:7];
+    // logic [7:0] blue_init_board [0:7];
 
-    // Game of Life state
-    logic [63:0] green_game_board =  64'h0000_0000_1C00_0000;
-    logic [63:0] green_next_state;
-    // logic [63:0] init_board =  64'h0000_0000_1C00_0000; // Example: spinner
-    //                              row0 row1 row2 row3 row4 row5 row6 row7
-    //                              0000 0000 0001 1100 0000 0000 0000 0000
-    //                              Bits at positions 18, 19, 20 (row 2, cols 3,4,5)
-    logic green_game_done;
-    logic red_game_done;
-    logic blue_game_done;
+    logic boards_initialized = 1'b0;
 
-    // logic start_game;
-    logic green_game_ready = 1'b1;
+    logic [63:0] green_next;
+    logic [63:0] red_next;
+    logic [63:0] blue_next;
 
-    // Start a new game iteration at the beginning of each frame
-    assign green_start_game = (pixel == 6'd0) && load_sreg && green_game_ready;
+    logic green_done, red_done, blue_done;
+    logic green_updating, red_updating, blue_updating;
 
+    // All games done when all three complete
+    assign game_done = green_done && red_done && blue_done;
+    
+    assign game_updating = green_updating || red_updating || blue_updating;
+    
+    
+    initial begin
+        $readmemh("initial_led_state/green.txt", green_init_board);
+        $readmemh("initial_led_state/red.txt", red_init_board);
+        $readmemh("initial_led_state/blue.txt", blue_init_board);
+        // for (int i = 0; i < 8; i++) begin
+        //     green_board = {green_board, green_init_board[i]};
+        //     red_board = {red_board, red_init_board[i]};
+        //     blue_board = {blue_board, blue_init_board[i]};
+        // end
+        
+        // green_board = green_init_board[0];
+        // red_board = red_init_board[0];
+        // blue_board = blue_init_board[0];
+    end
+
+    // Update all boards when all calculations complete
     always_ff @(posedge clk) begin
-        if (green_start_game) begin
-            green_game_ready <= 1'b0;
+
+         if (boards_initialized == 1'b0) begin
+            // green_board = {green_init_board[0], green_init_board[1], green_init_board[2], green_init_board[3],
+            //            green_init_board[4], green_init_board[5], green_init_board[6], green_init_board[7]};
+            // red_board   = {red_init_board[0], red_init_board[1], red_init_board[2], red_init_board[3],
+            //             red_init_board[4], red_init_board[5], red_init_board[6], red_init_board[7]};
+            // blue_board  = {blue_init_board[0], blue_init_board[1], blue_init_board[2], blue_init_board[3],
+            //             blue_init_board[4], blue_init_board[5],  blue_init_board[6], blue_init_board[7]};
+            green_board = green_init_board[0];
+            red_board   = red_init_board[0];
+            blue_board  = blue_init_board[0];
+            boards_initialized = 1'b1;
         end
-        else if (clk == 1'b0 && green_game_done) begin
-            green_game_ready <= 1'b1;
+        else if (game_done) begin
+            green_board <= green_next;
+            red_board   <= red_next;
+            blue_board  <= blue_next;
         end
     end
 
-    always_ff @(posedge green_game_done) begin
-        green_game_board <= green_next_state;
-        // this is triggering on game done but only once per game_done
-    end
-
-    // Game of Life instance
+    // ========== THREE GAME INSTANCES ==========
     game_of_life green (
         .clk(clk),
-        .start(green_start_game),
-        .init_state(green_game_board),
-        .curr_state(green_next_state),
-        .done(green_game_done)
+        .start(game_start),
+        .init_state(green_board),
+        .curr_state(green_next),
+        .done(green_done),
+        .updating(green_updating)
     );
 
     game_of_life red (
         .clk(clk),
-        .start(red_start_game),
-        .init_state(red_game_board),
-        .curr_state(red_next_state),
-        .done(red_game_done)
+        .start(game_start),
+        .init_state(red_board),
+        .curr_state(red_next),
+        .done(red_done),
+        .updating(red_updating)
     );
 
     game_of_life blue (
         .clk(clk),
-        .start(blue_start_game),
-        .init_state(blue_game_board),
-        .curr_state(blue_next_state),
-        .done(blue_game_done)
+        .start(game_start),
+        .init_state(blue_board),
+        .curr_state(blue_next),
+        .done(blue_done),
+        .updating(blue_updating)
     );
 
-    // Instance the WS2812B output driver
+    // ========== DISPLAY LOGIC ==========
     ws2812b u4 (
         .clk            (clk), 
         .serial_in      (shift_reg[23]), 
@@ -122,7 +133,6 @@ module top(
         .shift          (shift)
     );
 
-    // Instance the controller
     controller u5 (
         .clk            (clk), 
         .load_sreg      (load_sreg), 
@@ -131,35 +141,31 @@ module top(
         .frame          (frame)
     );
 
+    // Load shift register with RGB data based on switches
     always_ff @(posedge clk) begin
-        if (game_board[pixel] == 1'b1) begin
-            green_data <= 8'hFF;
-            red_data <= 8'h00;
-            blue_data <= 8'h00;
-        end
-        else begin
-            green_data <= 8'h00;
-            red_data <= 8'h00;
-            blue_data <= 8'h00;
-        end
-
         if (load_sreg) begin
+            logic g_alive, r_alive, b_alive;
+            g_alive = green_board[pixel];
+            r_alive = red_board[pixel];
+            b_alive = blue_board[pixel];
+            
             unique case ({ SW, BOOT })
-                2'b00:
-                    shift_reg <= { green_data, 16'd0 };
-                2'b01:
-                    shift_reg <= { 8'd0, red_data, 8'd0 };
-                2'b10:
-                    shift_reg <= { 16'd0, blue_data };
-                2'b11:
-                    shift_reg <= { green_data, red_data, blue_data };
+                2'b00:  // Green only
+                    shift_reg <= {g_alive ? 8'h0F : 8'h00, 16'h0000};
+                2'b01:  // Red only
+                    shift_reg <= {8'h00, r_alive ? 8'h0F : 8'h00, 8'h00};
+                2'b10:  // Blue only
+                    shift_reg <= {16'h0000, b_alive ? 8'h0F : 8'h00};
+                2'b11:  // All colors combined
+                    shift_reg <= {g_alive ? 8'h0F : 8'h00,
+                                  r_alive ? 8'h0F : 8'h00,
+                                  b_alive ? 8'h0F : 8'h00};
             endcase
         end
         else if (shift) begin
             shift_reg <= { shift_reg[22:0], 1'b0 };
         end
     end
-
 
     assign _48b = ws2812b_out;
     assign _45a = ~ws2812b_out;

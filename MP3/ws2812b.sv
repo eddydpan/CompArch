@@ -43,9 +43,9 @@ module ws2812b(
     always_comb begin
         if (state == TRANSMITTING)
             if (bit_being_sent == 1'b0)
-                ws2812b_out = (cycle_count < T0_CYCLE_COUNT); // alternatively [1]
+                ws2812b_out = (cycle_count < T0_CYCLE_COUNT);
             else
-                ws2812b_out = (cycle_count < T1_CYCLE_COUNT); // alternatively [2]
+                ws2812b_out = (cycle_count < T1_CYCLE_COUNT);
         else
             ws2812b_out = 1'b0;
     end

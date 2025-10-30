@@ -19,7 +19,7 @@ module led_matrix_tb;
     initial begin
         $dumpfile("led_matrix.vcd");
         $dumpvars(0, led_matrix_tb);
-        #30_000_000
+        #300_000_000
         $finish;
     end
 
