@@ -23,15 +23,21 @@ This module orchestrates the display timing and frame management for the LED mat
 Throughout this section, I'll be mainly referring to the `green_*` Game of Life implementation. Since the `red_*` and `blue_*` Game of Life modules are implemented the same way as `green_*`, I dive into the implementation of just the `green_*` module to reduce redundancy. 
 
 ### `game_of_life` module
-This module calculate takes in an initial state (`init_state`), clock (`clk`), and `start` flag to calculate what its current state (`curr_state)` should be after an iteration of the Game of Life's rules. In addition to `curr_state`, it also outputs flags for `done` and `updating`.
+This module takes in an initial state (`init_state`), clock (`clk`), and `start` flag to calculate what its current state (`curr_state`) should be after an iteration of the Game of Life's rules. In addition to `curr_state`, it also outputs flags for `done` and `updating`.
 
-I first instantiate three logics-- a 64-bit `next_state` temporary board, an `index` counter, and a register to count `alive_neighbors` of any given cell.
+I first instantiate three logics-- a 64-bit `next_state` temporary board, an `index` counter, and a register to count `alive_neighbors` of any given cell. I have stored all of my game boards in 64-bit registers as they are very compact representations, and despite being 1-dimensional, I'm still able to efficiently compute any cell's neighbors.
 
 Next is an `initial` block that ensures the `done` and `updating` flags are set to 0.
 
-The main logic occurs in these next two `always` blocks. The first is an `always_comb` which calls the `count_alive_neighbors` function and stores the result in the `alive_neighbors` register. The `count_alive_neighbors` function simply takes the board and index to count the alive neighbors of, finds the indices of all of the neighboring cells--taking the cyclic boundary conditions into account--and checks each cell for a 1, adding it to the return value. 
+The main logic occurs in these next two `always` blocks. The first is an `always_comb` which calls the `count_alive_neighbors` function and stores the result in the `alive_neighbors` register. The `count_alive_neighbors` function simply takes the board and index to count the alive neighbors of, finds the indices of all of the neighboring cells--taking the cyclic boundary conditions into account--and checks each cell for a `1`, adding it to the return value. With the wrap-around for the cells, the 8x8 LED matrix can better emulate Conway's Game of Life if it were to be played on an infinite 2D matrix, and allowing for a stable pattern like the 'Glider' to travel forever.
 
-The last part of this module is the `always_ff` block that triggers on the positive edge of the clock tick, where an `if` statement resets `index` to 0, `updating` to high, and `done` to low (not done). Now, if `updating` is high, the Game of Life rules are applied on the `alive_neighbors` register computed in the earlier `always_comb` block. If the cell at the index meets the condition to be alive, then `next_state` is updated with a `1` at that index. If it does not, then it will be populated with a `0`. When `index` reaches `63`, the last one in the matrix, the `curr_state` output is assigned to the populated `next_state`, the `done` flag is set to high, and the `updating` flag set to low. If the index is not yet at `63`, it will increment by `1`. 
+#### Conway's Game of Life Rules
+For reference, these are the Game of Life rules that apply to each cell in the grid:
+- **Birth**: A dead cell with exactly 3 live neighbors becomes alive
+- **Survival**: A live cell with 2 or 3 live neighbors stays alive
+- **Death**: All other cells die or stay dead
+
+The last part of this module is the `always_ff` block that triggers on the positive edge of the clock tick, where an `if` statement resets `index` to 0, `updating` to high, and `done` to low (not done). Now, if `updating` is high, the Game of Life rules are applied on the `alive_neighbors` register computed in the earlier `always_comb` block. If the cell at the index meets the Conway's Game of Life rules to be alive, then `next_state` is updated with a `1` at that index. If it does not, then it will be populated with a `0`. When `index` reaches `63`, the last one in the matrix, the `curr_state` output is assigned to the populated `next_state`, the `done` flag is set to high, and the `updating` flag set to low. If the index is not yet at `63`, it will increment by `1`. 
 
 
 Here's what the simulation looks like for one iteration:
@@ -59,7 +65,7 @@ Finally, by the 36th index, the last hex from the previous state `8` (4b'0100), 
 At the end of the 63rd index, the updating flag turns off, and the done flag goes up. `green_board` is then updated to `next_state`. 
 ![63rd index, finished GOL ](assets/gol_final_index.png)
 
-In conclusion, a good next-step would be to set the state of the 64-bit register to all 0s and then populate it at each frame so that the data from the last state's bits aren't pre-populated.
+A potential next-step would be to set the state of the 64-bit register to all 0s and then populate it at each frame so that the data from the last state's bits aren't pre-populated--rendering the simulation results a bit easier to read and debug.
 
 ### `top` module
 I organized the `top` module similarly to the `led_matrix` example. Since I keep track of each of my game states in a 64-bit register, where each bit represents if the cell at that index is alive or dead (1 or 0), I removed the `memory` modules. To initialize my game state from a file, I used an initial block with `$readmemh` to read in the initial 64-bits of each text file into an 1-element unpacked temporary array, `green_init_board`. In the `always_ff` block right after it that executes on the positive clock edge, I check a `board_initialized` flag to determine whether I initialize my `green_board` with the 64-bits from the `green.txt` file, or update my `green_board` to `green_next` computed from my `game_of_life` module.
@@ -109,3 +115,6 @@ and transitions into its
 In simulation, the Spinner repeats over and over again between horizontal and vertical, which matches its expected behavior and thus validates this Game of Life implementation for this test case.
 
 As further validation, in addition to the Spinner, I also tested the 'Glider' pattern, which is expected to move across the board and not die out. I set it up on the red channel, and in the video, I demonstrate its behavior of traveling through the cells on its diagonal.
+
+## Results
+View the video labeled `CompArch_MP3_demo.mov` to see the working representation of this Game of Life implementation on the WS2812B.
