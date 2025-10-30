@@ -1,0 +1,41 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Thu Oct 30 02:42:44 2025
+[*]
+[dumpfile] "/home/epan/Github/CompArch/MP3/led_matrix.vcd"
+[dumpfile_mtime] "Thu Oct 30 01:42:23 2025"
+[dumpfile_size] 2014683283
+[savefile] "/home/epan/Github/CompArch/MP3/visual_style.gtkw"
+[timestart] 959999445
+[size] 1920 1001
+[pos] -1 -1
+*-10.000000 960000075 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] led_matrix_tb.
+[treeopen] led_matrix_tb.u0.
+[sst_width] 297
+[signals_width] 304
+[sst_expanded] 1
+[sst_vpaned_height] 282
+@8028
+led_matrix_tb.clk
+@24
+led_matrix_tb.u0.pixel[5:0]
+@20000
+-
+@22
+led_matrix_tb.u0.green_board[63:0]
+@20000
+-
+@28
+led_matrix_tb.u0.green.start
+@24
+led_matrix_tb.u0.green.index[5:0]
+@22
+led_matrix_tb.u0.green.init_state[63:0]
+led_matrix_tb.u0.green.alive_neighbors[3:0]
+led_matrix_tb.u0.green.next_state[63:0]
+@28
+led_matrix_tb.u0.green.updating
+led_matrix_tb.u0.green.done
+[pattern_trace] 1
+[pattern_trace] 0
