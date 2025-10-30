@@ -63,27 +63,12 @@ module top(
         $readmemh("initial_led_state/green.txt", green_init_board);
         $readmemh("initial_led_state/red.txt", red_init_board);
         $readmemh("initial_led_state/blue.txt", blue_init_board);
-        // for (int i = 0; i < 8; i++) begin
-        //     green_board = {green_board, green_init_board[i]};
-        //     red_board = {red_board, red_init_board[i]};
-        //     blue_board = {blue_board, blue_init_board[i]};
-        // end
-        
-        // green_board = green_init_board[0];
-        // red_board = red_init_board[0];
-        // blue_board = blue_init_board[0];
     end
 
     // Update all boards when all calculations complete
     always_ff @(posedge clk) begin
 
          if (boards_initialized == 1'b0) begin
-            // green_board = {green_init_board[0], green_init_board[1], green_init_board[2], green_init_board[3],
-            //            green_init_board[4], green_init_board[5], green_init_board[6], green_init_board[7]};
-            // red_board   = {red_init_board[0], red_init_board[1], red_init_board[2], red_init_board[3],
-            //             red_init_board[4], red_init_board[5], red_init_board[6], red_init_board[7]};
-            // blue_board  = {blue_init_board[0], blue_init_board[1], blue_init_board[2], blue_init_board[3],
-            //             blue_init_board[4], blue_init_board[5],  blue_init_board[6], blue_init_board[7]};
             green_board = green_init_board[0];
             red_board   = red_init_board[0];
             blue_board  = blue_init_board[0];
