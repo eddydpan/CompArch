@@ -1,3 +1,6 @@
 [submodule "MP4"]
 	path = MP4
 	url = git@github.com:darianjimenez/MP4.git
+[submodule "fpga-sequencer"]
+	path = fpga-sequencer
+	url = git@github.com:eddydpan/fpga-sequencer.git
